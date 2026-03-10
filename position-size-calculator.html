@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Positionsgrößenrechner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root[data-theme="dark"] {
+    --bg:        #0e0e0f;
+    --surface:   #161618;
+    --border:    #2a2a2e;
+    --border-hi: #404048;
+    --text:      #e8e8ec;
+    --muted:     #6b6b78;
+    --accent:    #c8a96e;
+    --accent-lo: rgba(200,169,110,0.12);
+    --accent-md: rgba(200,169,110,0.25);
+    --green:     #4ade80;
+    --green-lo:  rgba(74,222,128,0.1);
+    --red:       #f87171;
+    --red-lo:    rgba(248,113,113,0.1);
+    --yellow:    #fbbf24;
+    --yellow-lo: rgba(251,191,36,0.1);
+    --input-bg:  #1c1c1f;
+    --tag-bg:    #222226;
+    --shadow:    0 4px 24px rgba(0,0,0,0.4);
+    --card-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+
+  :root[data-theme="light"] {
+    --bg:        #f2f1ed;
+    --surface:   #ffffff;
+    --border:    #e0dfd8;
+    --border-hi: #c8c7bf;
+    --text:      #1a1a1c;
+    --muted:     #8a8a94;
+    --accent:    #8b6400;
+    --accent-lo: rgba(139,100,0,0.08);
+    --accent-md: rgba(139,100,0,0.18);
+    --green:     #16a34a;
+    --green-lo:  rgba(22,163,74,0.08);
+    --red:       #dc2626;
+    --red-lo:    rgba(220,38,38,0.08);
+    --yellow:    #d97706;
+    --yellow-lo: rgba(217,119,6,0.08);
+    --input-bg:  #f8f7f3;
+    --tag-bg:    #f0efe9;
+    --shadow:    0 4px 24px rgba(0,0,0,0.08);
+    --card-shadow: 0 1px 0 rgba(0,0,0,0.04) inset;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px 48px;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 840px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .header-left { display: flex; align-items: baseline; gap: 10px; }
+  .header h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .header-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    background: var(--accent-lo);
+    color: var(--accent);
+    border: 1px solid var(--accent-md);
+    border-radius: 4px;
+    padding: 2px 8px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .theme-toggle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-family: 'Syne', sans-serif;
+    display: flex; align-items: center; gap: 6px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--border-hi); color: var(--text); }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow), var(--card-shadow);
+    overflow: hidden;
+  }
+
+  .card-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .pane {
+    padding: 28px 28px 28px;
+  }
+  .pane-left {
+    border-right: 1px solid var(--border);
+  }
+
+  @media (max-width: 640px) {
+    .card-body { grid-template-columns: 1fr; }
+    .pane-left { border-right: none; border-bottom: 1px solid var(--border); }
+    .pane { padding: 22px 20px; }
+  }
+
+  /* ── Mode Selector ── */
+  .section-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .mode-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  .mode-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 13px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s;
+  }
+  .mode-btn:hover { border-color: var(--border-hi); background: var(--accent-lo); }
+  .mode-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-lo);
+  }
+  .mode-btn-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--border-hi);
+    margin-top: 2px;
+    flex-shrink: 0;
+    transition: all 0.18s;
+  }
+  .mode-btn.active .mode-btn-dot {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+  .mode-btn-text { flex: 1; }
+  .mode-btn-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+    margin-bottom: 2px;
+    letter-spacing: -0.01em;
+  }
+  .mode-btn-desc {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ── Input fields ── */
+  .fields-area { display: flex; flex-direction: column; gap: 14px; }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .field-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .tooltip-icon {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--border-hi);
+    color: var(--muted);
+    font-size: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: help;
+    position: relative;
+    font-family: 'DM Mono', monospace;
+    flex-shrink: 0;
+  }
+  .tooltip-icon:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 20px;
+    top: -4px;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 0.7rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    max-width: 220px;
+    white-space: normal;
+    width: 200px;
+    z-index: 100;
+    font-family: 'Syne', sans-serif;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .input-wrap input {
+    width: 100%;
+    padding: 10px 40px 10px 13px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: 400;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .input-wrap input::-webkit-outer-spin-button,
+  .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .input-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-lo);
+  }
+  .input-unit {
+    position: absolute;
+    right: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .hint-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 11px;
+    border-radius: 7px;
+    font-size: 0.72rem;
+    color: var(--yellow);
+    background: var(--yellow-lo);
+    border: 1px solid rgba(251,191,36,0.2);
+    margin-top: 4px;
+    display: none;
+  }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 22px;
+  }
+  .btn-primary {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: var(--accent);
+    color: #0a0800;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: opacity 0.18s, transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-ghost {
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: border-color 0.18s, color 0.18s;
+  }
+  .btn-ghost:hover { border-color: var(--border-hi); color: var(--text); }
+
+  /* ── Output pane ── */
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .output-preview-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border-hi);
+    transition: background 0.3s;
+  }
+  .status-dot.active { background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+  .result-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .result-item {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--input-bg);
+    transition: border-color 0.3s;
+  }
+  .result-item.populated { border-color: var(--accent); }
+  .result-item.highlight { border-color: var(--green); background: var(--green-lo); }
+
+  .result-item-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .result-item-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+  .result-item-value.populated { color: var(--text); }
+  .result-item-value.highlight { color: var(--green); }
+
+  .result-unit {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-left: 4px;
+  }
+
+  /* Hebel 2-step toggle */
+  .hebel-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1px dashed var(--border-hi);
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-lo);
+    transition: background 0.18s, border-color 0.18s;
+    user-select: none;
+  }
+  .hebel-toggle:hover { background: var(--accent-md); border-color: var(--accent); }
+  .hebel-toggle-icon { font-size: 1rem; font-weight: 400; transition: transform 0.2s; line-height: 1; display: inline-block; }
+  .hebel-toggle.open .hebel-toggle-icon { transform: rotate(45deg); }
+  .hebel-panel {
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 14px;
+    background: var(--input-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: fadeIn 0.18s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+  .hebel-panel-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
+  .hebel-input-row { display: flex; gap: 8px; align-items: center; }
+
+  .info-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 13px;
+    border-radius: 9px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    line-height: 1.5;
+  }
+
+  .result-item-sub {
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 3px;
+    font-family: 'Syne', sans-serif;
+  }
+
+  /* Risk badge */
+  .risk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .risk-badge.visible { opacity: 1; }
+  .risk-badge.low  { background: var(--green-lo);  color: var(--green);  border: 1px solid rgba(74,222,128,0.25); }
+  .risk-badge.mid  { background: var(--yellow-lo); color: var(--yellow); border: 1px solid rgba(251,191,36,0.25); }
+  .risk-badge.high { background: var(--red-lo);    color: var(--red);    border: 1px solid rgba(248,113,113,0.25); }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 18px 0;
+  }
+
+  /* RR row */
+  .rr-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Info footer */
+  .card-footer {
+    padding: 14px 28px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .card-footer span { color: var(--accent); font-weight: 600; }
+
+  @media (max-width: 640px) {
+    .card-footer { padding: 14px 20px; }
+    .rr-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="header">
+    <div class="header-left">
+      <h1>Positionsgrößenrechner</h1>
+      <span class="header-badge">Trading Journal</span>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+      <span id="themeIcon">☀</span> Light
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+
+      <!-- LEFT: Input pane -->
+      <div class="pane pane-left">
+        <p class="section-label">Berechnungsmethode</p>
+
+        <div class="mode-selector">
+          <button class="mode-btn active" onclick="setMode(0)" id="modeBtn0">
+            <span class="mode-btn-dot"></span>
+            <span class="mode-btn-text">
+              <span class="mode-btn-title">Riskobetrag</span>
+              <span class="mode-btn-desc">Du kennst deinen max. Verlust in USD und die %-Distanz zum SL</span>
+            </span>
+          </button>
+          <button class="mode-btn" onclick="setMode(1)" id="modeBtn1">
+            <span class="mode-btn-dot"></span>
+            <span class="mode-btn-text">
+              <span class="mode-btn-title">Portfolio & %-Risiko</span>
+              <span class="mode-btn-desc">Berechnung aus Portfoliogrösse und prozentualem Trade-Risiko</span>
+            </span>
+          </button>
+          <button class="mode-btn" onclick="setMode(2)" id="modeBtn2">
+            <span class="mode-btn-dot"></span>
+            <span class="mode-btn-text">
+              <span class="mode-btn-title">Einstieg & Stop-Loss</span>
+              <span class="mode-btn-desc">Exakte Berechnung mit Entry-Preis und SL-Preis inkl. Coin-Anzahl</span>
+            </span>
+          </button>
+        </div>
+
+        <!-- Mode 0 fields -->
+        <div id="fields0" class="fields-area">
+          <div class="field-group">
+            <label class="field-label">
+              Zu riskierender Betrag
+              <span class="tooltip-icon" data-tip="Maximaler Verlust den du bei diesem Trade akzeptierst, in USD.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f0_betrag" placeholder="z.B. 50" min="0" />
+              <span class="input-unit">USD</span>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">
+              Risiko in % (SL-Distanz)
+              <span class="tooltip-icon" data-tip="Prozentuale Distanz vom Einstieg zum Stop-Loss. Bsp: Entry 100, SL 98 → 2%">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f0_risk" placeholder="z.B. 2" min="0" max="100" step="0.1" />
+              <span class="input-unit">%</span>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="field-group">
+            <label class="field-label">
+              Take-Profit Ziel (optional)
+              <span class="tooltip-icon" data-tip="Optionaler Take-Profit in % ab Entry. Wird für die R:R-Berechnung verwendet.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f0_tp" placeholder="z.B. 6" min="0" step="0.1" />
+              <span class="input-unit">%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode 1 fields -->
+        <div id="fields1" class="fields-area" style="display:none">
+          <div class="field-group">
+            <label class="field-label">
+              Portfoliogrösse
+              <span class="tooltip-icon" data-tip="Gesamtkapital deines Trading-Accounts in USD.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f1_portfolio" placeholder="z.B. 10000" min="0" />
+              <span class="input-unit">USD</span>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">
+              Risiko pro Trade
+              <span class="tooltip-icon" data-tip="Profis riskieren 0.5–2% ihres Portfolios pro Trade. Nie über 5%.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f1_riskPort" placeholder="z.B. 1" min="0" max="100" step="0.1" />
+              <span class="input-unit">%</span>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">
+              SL-Distanz (Risiko im Trade)
+              <span class="tooltip-icon" data-tip="Prozentuale Distanz vom Einstieg zum Stop-Loss.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f1_riskTrade" placeholder="z.B. 3" min="0" max="100" step="0.1" />
+              <span class="input-unit">%</span>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="field-group">
+            <label class="field-label">
+              Take-Profit Ziel (optional)
+              <span class="tooltip-icon" data-tip="Optionaler Take-Profit in % ab Entry. Wird für die R:R-Berechnung verwendet.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f1_tp" placeholder="z.B. 6" min="0" step="0.1" />
+              <span class="input-unit">%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode 2 fields -->
+        <div id="fields2" class="fields-area" style="display:none">
+          <div class="field-group">
+            <label class="field-label">
+              Portfoliogrösse
+              <span class="tooltip-icon" data-tip="Gesamtkapital deines Trading-Accounts in USD.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f2_portfolio" placeholder="z.B. 10000" min="0" />
+              <span class="input-unit">USD</span>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">
+              Risiko pro Trade
+              <span class="tooltip-icon" data-tip="Profis riskieren 0.5–2% ihres Portfolios pro Trade. Nie über 5%.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f2_riskPort" placeholder="z.B. 1" min="0" max="100" step="0.1" />
+              <span class="input-unit">%</span>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">
+              Einstiegspreis
+              <span class="tooltip-icon" data-tip="Dein geplanter Kaufpreis für den Asset in USD.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f2_entry" placeholder="z.B. 65000" min="0" />
+              <span class="input-unit">USD</span>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">
+              Stop-Loss-Preis
+              <span class="tooltip-icon" data-tip="Preis bei dem du den Trade automatisch verlässt um Verluste zu begrenzen.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f2_sl" placeholder="z.B. 63000" min="0" />
+              <span class="input-unit">USD</span>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="field-group">
+            <label class="field-label">
+              Take-Profit-Preis (optional)
+              <span class="tooltip-icon" data-tip="Zielpreis für deinen Gewinn. Ermöglicht R:R-Berechnung.">?</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" id="f2_tp" placeholder="z.B. 71000" min="0" />
+              <span class="input-unit">USD</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" onclick="calculate()">Berechnen</button>
+          <button class="btn-ghost" onclick="resetForm()">Reset</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Output pane -->
+      <div class="pane">
+        <div class="output-header">
+          <p class="output-preview-label">Ergebnis</p>
+          <div class="status-dot" id="statusDot"></div>
+        </div>
+
+        <!-- Mode 0 output -->
+        <div id="out0" class="result-list">
+          <div class="result-item" id="o0_pos">
+            <div class="result-item-label">Positionsgrösse</div>
+            <div class="result-item-value" id="o0_pos_v">—<span class="result-unit">USD</span></div>
+          </div>
+          <div class="result-item" id="o0_rr">
+            <div class="result-item-label">Risk / Reward</div>
+            <div class="result-item-value" id="o0_rr_v">—</div>
+            <div class="result-item-sub" id="o0_rr_hint"></div>
+          </div>
+          <div class="info-note" id="o0_note" style="display:none">
+            ℹ Risikobewertung (% des Portfolios) nicht möglich – Portfoliogrösse unbekannt. Nutze Modus 2 für vollständige Bewertung.
+          </div>
+          <!-- Step 2: Hebel -->
+          <div class="hebel-toggle" id="hebel_toggle0" style="display:none" onclick="toggleHebel(0)">
+            <span class="hebel-toggle-icon" id="hebel_icon0">＋</span>
+            <span>Schritt 2 – Hebel berechnen (optional)</span>
+          </div>
+          <div class="hebel-panel" id="hebel_panel0" style="display:none">
+            <p class="hebel-panel-desc">Du kennst jetzt deine Positionsgrösse. Wie viel Margin (Eigenkapital) möchtest du einsetzen?</p>
+            <div class="hebel-input-row">
+              <div class="input-wrap" style="flex:1">
+                <input type="number" id="h0_margin" placeholder="z.B. 500" min="0" oninput="calcHebel(0)" />
+                <span class="input-unit">USD</span>
+              </div>
+            </div>
+            <div class="result-item" id="o0_hebel" style="margin-top:10px">
+              <div class="result-item-label">Benötigter Hebel <span style="font-weight:400;font-size:0.65rem;">(Pos. ÷ Margin)</span></div>
+              <div class="result-item-value" id="o0_hebel_v">—</div>
+              <div class="result-item-sub" id="o0_hebel_hint"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode 1 output -->
+        <div id="out1" class="result-list" style="display:none">
+          <div class="result-item" id="o1_betrag">
+            <div class="result-item-label">Risikobetrag</div>
+            <div class="result-item-value" id="o1_betrag_v">—<span class="result-unit">USD</span></div>
+          </div>
+          <div class="result-item" id="o1_pos">
+            <div class="result-item-label">Positionsgrösse</div>
+            <div class="result-item-value" id="o1_pos_v">—<span class="result-unit">USD</span></div>
+          </div>
+          <div class="result-item" id="o1_lev">
+            <div class="result-item-label">Kapitalnutzung <span style="font-weight:400;font-size:0.65rem;">(Position ÷ Portfolio)</span></div>
+            <div class="result-item-value" id="o1_lev_v">—</div>
+            <div class="result-item-sub" id="o1_lev_hint"></div>
+          </div>
+          <div class="result-item" id="o1_rr">
+            <div class="result-item-label">Risk / Reward</div>
+            <div class="result-item-value" id="o1_rr_v">—</div>
+            <div class="result-item-sub" id="o1_rr_hint"></div>
+          </div>
+          <div id="o1_badge" class="risk-badge"></div>
+
+          <!-- Step 2: Hebel -->
+          <div class="hebel-toggle" id="hebel_toggle1" style="display:none" onclick="toggleHebel(1)">
+            <span class="hebel-toggle-icon" id="hebel_icon1">＋</span>
+            <span>Schritt 2 – Hebel berechnen (optional)</span>
+          </div>
+          <div class="hebel-panel" id="hebel_panel1" style="display:none">
+            <p class="hebel-panel-desc">Du kennst jetzt deine Positionsgrösse. Wie viel Margin (Eigenkapital) möchtest du einsetzen?</p>
+            <div class="hebel-input-row">
+              <div class="input-wrap" style="flex:1">
+                <input type="number" id="h1_margin" placeholder="z.B. 500" min="0" oninput="calcHebel(1)" />
+                <span class="input-unit">USD</span>
+              </div>
+            </div>
+            <div class="result-item" id="o1_hebel" style="margin-top:10px">
+              <div class="result-item-label">Benötigter Hebel <span style="font-weight:400;font-size:0.65rem;">(Pos. ÷ Margin)</span></div>
+              <div class="result-item-value" id="o1_hebel_v">—</div>
+              <div class="result-item-sub" id="o1_hebel_hint"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode 2 output -->
+        <div id="out2" class="result-list" style="display:none">
+          <div class="result-item" id="o2_betrag">
+            <div class="result-item-label">Risikobetrag</div>
+            <div class="result-item-value" id="o2_betrag_v">—<span class="result-unit">USD</span></div>
+          </div>
+          <div class="rr-row">
+            <div class="result-item" id="o2_pos">
+              <div class="result-item-label">Positionsgrösse</div>
+              <div class="result-item-value" id="o2_pos_v">—<span class="result-unit">USD</span></div>
+            </div>
+            <div class="result-item" id="o2_coins">
+              <div class="result-item-label">Anzahl Einheiten</div>
+              <div class="result-item-value" id="o2_coins_v">—</div>
+            </div>
+          </div>
+          <div class="rr-row">
+            <div class="result-item" id="o2_lev">
+              <div class="result-item-label">Kapitalnutzung <span style="font-weight:400;font-size:0.65rem;">(Pos. ÷ Portfolio)</span></div>
+              <div class="result-item-value" id="o2_lev_v">—</div>
+              <div class="result-item-sub" id="o2_lev_hint"></div>
+            </div>
+            <div class="result-item" id="o2_rr">
+              <div class="result-item-label">Risk / Reward</div>
+              <div class="result-item-value" id="o2_rr_v">—</div>
+              <div class="result-item-sub" id="o2_rr_hint"></div>
+            </div>
+          </div>
+          <div id="o2_badge" class="risk-badge"></div>
+
+          <!-- Step 2: Hebel -->
+          <div class="hebel-toggle" id="hebel_toggle2" style="display:none" onclick="toggleHebel(2)">
+            <span class="hebel-toggle-icon" id="hebel_icon2">＋</span>
+            <span>Schritt 2 – Hebel berechnen (optional)</span>
+          </div>
+          <div class="hebel-panel" id="hebel_panel2" style="display:none">
+            <p class="hebel-panel-desc">Du kennst jetzt deine Positionsgrösse. Wie viel Margin (Eigenkapital) möchtest du einsetzen?</p>
+            <div class="hebel-input-row">
+              <div class="input-wrap" style="flex:1">
+                <input type="number" id="h2_margin" placeholder="z.B. 500" min="0" oninput="calcHebel(2)" />
+                <span class="input-unit">USD</span>
+              </div>
+            </div>
+            <div class="result-item" id="o2_hebel" style="margin-top:10px">
+              <div class="result-item-label">Benötigter Hebel <span style="font-weight:400;font-size:0.65rem;">(Pos. ÷ Margin)</span></div>
+              <div class="result-item-value" id="o2_hebel_v">—</div>
+              <div class="result-item-sub" id="o2_hebel_hint"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <span>Profis riskieren 0.5–2%</span> pro Trade. Nie über 5% des Portfolios.
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentMode = 0;
+
+  function setMode(n) {
+    currentMode = n;
+    [0,1,2].forEach(i => {
+      document.getElementById('modeBtn'+i).classList.toggle('active', i===n);
+      document.getElementById('fields'+i).style.display = i===n ? 'flex' : 'none';
+      document.getElementById('out'+i).style.display = i===n ? 'flex' : 'none';
+    });
+    clearOutputs();
+  }
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.getElementById('themeIcon').textContent = isDark ? '☽' : '☀';
+    document.getElementById('themeBtn').childNodes[1].textContent = isDark ? ' Dark' : ' Light';
+  }
+
+  function calcRR(riskPct, tpPct) {
+    if (!tpPct || tpPct <= 0) return null;
+    return (tpPct / riskPct).toFixed(2);
+  }
+
+  function getRRFeedback(rrVal) {
+    const r = parseFloat(rrVal);
+    if (r >= 3)   return { text: '✓ Ausgezeichnet (≥ 1:3)', color: 'var(--green)' };
+    if (r >= 2)   return { text: '✓ Gut – professioneller Standard (≥ 1:2)', color: 'var(--green)' };
+    if (r >= 1.5) return { text: '⚠ Akzeptabel, aber nur bei hoher Win-Rate', color: 'var(--yellow)' };
+    return { text: '✕ Zu schwach – Trade überdenken (< 1:1.5)', color: 'var(--red)' };
+  }
+
+  function setRRHint(hintId, valId, rrVal) {
+    if (!rrVal) return;
+    const fb = getRRFeedback(rrVal);
+    const hint = document.getElementById(hintId);
+    if (hint) { hint.textContent = fb.text; hint.style.color = fb.color; }
+    const valEl = document.getElementById(valId);
+    if (valEl) valEl.style.color = parseFloat(rrVal) >= 2 ? 'var(--green)' : parseFloat(rrVal) >= 1.5 ? 'var(--yellow)' : 'var(--red)';
+  }
+
+  function getRiskClass(pct) {
+    if (pct <= 2) return 'low';
+    if (pct <= 4) return 'mid';
+    return 'high';
+  }
+
+  function getRiskLabel(pct, cls) {
+    const labels = { low: '✓ Konservatives Risiko (≤ 2%)', mid: '⚠ Erhöhtes Risiko (2–4%)', high: '✕ Hohes Risiko – Vorsicht (> 4%)' };
+    return labels[cls];
+  }
+
+  function setVal(id, val, highlight=false) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val;
+    el.classList.toggle('populated', true);
+    el.classList.toggle('highlight', highlight);
+  }
+
+  function setBadge(id, pct) {
+    const el = document.getElementById(id);
+    const cls = getRiskClass(pct);
+    el.className = 'risk-badge ' + cls + ' visible';
+    el.textContent = getRiskLabel(pct, cls);
+  }
+
+  function highlightItem(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('populated');
+  }
+
+  function calculate() {
+    if (currentMode === 0) {
+      const betrag = parseFloat(document.getElementById('f0_betrag').value);
+      const risk   = parseFloat(document.getElementById('f0_risk').value);
+      const tp     = parseFloat(document.getElementById('f0_tp').value);
+      if (!betrag || !risk) return alert('Bitte Pflichtfelder ausfüllen.');
+      const pos = (betrag / (risk / 100)).toFixed(2);
+      setVal('o0_pos_v', fmt(pos) + ' USD');
+      highlightItem('o0_pos');
+      const rr = calcRR(risk, tp);
+      if (rr) {
+        setVal('o0_rr_v', '1 : ' + rr);
+        highlightItem('o0_rr');
+        setRRHint('o0_rr_hint', 'o0_rr_v', rr);
+      } else {
+        setVal('o0_rr_v', '— (kein TP eingegeben)');
+        const h = document.getElementById('o0_rr_hint');
+        if (h) { h.textContent = 'TP eingeben für R:R-Bewertung'; h.style.color = 'var(--muted)'; }
+      }
+      document.getElementById('o0_note').style.display = 'flex';
+      window._pos0 = parseFloat(pos);
+      window._risk0 = betrag;
+      showHebelToggle(0);
+      document.getElementById('statusDot').classList.add('active');
+
+    } else if (currentMode === 1) {
+      const portfolio = parseFloat(document.getElementById('f1_portfolio').value);
+      const riskPort  = parseFloat(document.getElementById('f1_riskPort').value);
+      const riskTrade = parseFloat(document.getElementById('f1_riskTrade').value);
+      const tp        = parseFloat(document.getElementById('f1_tp').value);
+      if (!portfolio || !riskPort || !riskTrade) return alert('Bitte Pflichtfelder ausfüllen.');
+      const betrag = portfolio * (riskPort / 100);
+      const pos = (betrag / (riskTrade / 100)).toFixed(2);
+      const kapitalnutzung = (pos / portfolio).toFixed(2);
+      setVal('o1_betrag_v', fmt(betrag.toFixed(2)) + ' USD'); highlightItem('o1_betrag');
+      setVal('o1_pos_v', fmt(pos) + ' USD'); highlightItem('o1_pos');
+      const levNum = parseFloat(kapitalnutzung);
+      setVal('o1_lev_v', kapitalnutzung + 'x'); highlightItem('o1_lev');
+      document.getElementById('o1_lev_hint').textContent = levNum < 1 ? 'Kein Hebel – nur Teil des Portfolios eingesetzt' : levNum === 1 ? 'Volles Kapital eingesetzt' : 'Fremdkapital / Hebel aktiv';
+      const rr = calcRR(riskTrade, tp);
+      if (rr) {
+        setVal('o1_rr_v', '1 : ' + rr); highlightItem('o1_rr');
+        setRRHint('o1_rr_hint', 'o1_rr_v', rr);
+      } else {
+        setVal('o1_rr_v', '— (kein TP eingegeben)');
+        const h = document.getElementById('o1_rr_hint');
+        if (h) { h.textContent = 'TP eingeben für R:R-Bewertung'; h.style.color = 'var(--muted)'; }
+      }
+      setBadge('o1_badge', riskPort);
+      // store pos + risk for step 2
+      window._pos1 = parseFloat(pos);
+      window._risk1 = betrag;
+      showHebelToggle(1);
+      document.getElementById('statusDot').classList.add('active');
+
+    } else if (currentMode === 2) {
+      const portfolio = parseFloat(document.getElementById('f2_portfolio').value);
+      const riskPct   = parseFloat(document.getElementById('f2_riskPort').value);
+      const entry     = parseFloat(document.getElementById('f2_entry').value);
+      const sl        = parseFloat(document.getElementById('f2_sl').value);
+      const tpPrice   = parseFloat(document.getElementById('f2_tp').value);
+      if (!portfolio || !riskPct || !entry || !sl) return alert('Bitte Pflichtfelder ausfüllen.');
+      if (entry === sl) return alert('Entry und Stop-Loss dürfen nicht gleich sein.');
+      const betrag    = portfolio * (riskPct / 100);
+      const priceDiff = Math.abs(entry - sl);
+      const coins     = betrag / priceDiff;
+      const posUSD    = coins * entry;
+      const kapitalnutzung = (posUSD / portfolio).toFixed(2);
+      const slPct     = (priceDiff / entry * 100).toFixed(4);
+      setVal('o2_betrag_v', fmt(betrag.toFixed(2)) + ' USD'); highlightItem('o2_betrag');
+      setVal('o2_pos_v', fmt(posUSD.toFixed(2)) + ' USD'); highlightItem('o2_pos');
+      setVal('o2_coins_v', coins.toFixed(4) + ' Einh.'); highlightItem('o2_coins');
+      const lev2Num = parseFloat(kapitalnutzung);
+      setVal('o2_lev_v', kapitalnutzung + 'x'); highlightItem('o2_lev');
+      document.getElementById('o2_lev_hint').textContent = lev2Num < 1 ? 'Kein Hebel – nur Teil des Portfolios eingesetzt' : lev2Num === 1 ? 'Volles Kapital eingesetzt' : 'Fremdkapital / Hebel aktiv';
+      if (tpPrice && tpPrice !== entry) {
+        const tpPct = Math.abs(tpPrice - entry) / entry * 100;
+        const rr = calcRR(parseFloat(slPct), tpPct);
+        setVal('o2_rr_v', '1 : ' + rr); highlightItem('o2_rr');
+        setRRHint('o2_rr_hint', 'o2_rr_v', rr);
+      } else {
+        setVal('o2_rr_v', '— (kein TP eingegeben)');
+        const h = document.getElementById('o2_rr_hint');
+        if (h) { h.textContent = 'TP eingeben für R:R-Bewertung'; h.style.color = 'var(--muted)'; }
+      }
+      setBadge('o2_badge', riskPct);
+      // store pos + risk for step 2
+      window._pos2 = posUSD;
+      window._risk2 = betrag;
+      showHebelToggle(2);
+      document.getElementById('statusDot').classList.add('active');
+    }
+  }
+
+  function showHebelToggle(n) {
+    const toggle = document.getElementById('hebel_toggle' + n);
+    if (toggle) toggle.style.display = 'flex';
+    // reset panel state
+    const panel = document.getElementById('hebel_panel' + n);
+    if (panel) panel.style.display = 'none';
+    const tog = document.getElementById('hebel_toggle' + n);
+    if (tog) tog.classList.remove('open');
+    const input = document.getElementById('h' + n + '_margin');
+    if (input) input.value = '';
+    setVal('o' + n + '_hebel_v', '—');
+    const hint = document.getElementById('o' + n + '_hebel_hint');
+    if (hint) { hint.textContent = ''; hint.style.color = ''; }
+  }
+
+  function toggleHebel(n) {
+    const toggle = document.getElementById('hebel_toggle' + n);
+    const panel  = document.getElementById('hebel_panel' + n);
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'flex';
+    toggle.classList.toggle('open', !isOpen);
+    if (!isOpen) {
+      setTimeout(() => document.getElementById('h' + n + '_margin').focus(), 50);
+    }
+  }
+
+  function calcHebel(n) {
+    const margin  = parseFloat(document.getElementById('h' + n + '_margin').value);
+    const pos     = window['_pos' + n];
+    const risk    = window['_risk' + n];
+    const hebelEl = document.getElementById('o' + n + '_hebel_v');
+    const hintEl  = document.getElementById('o' + n + '_hebel_hint');
+    if (!margin || margin <= 0 || !pos) {
+      if (hebelEl) { hebelEl.textContent = '—'; hebelEl.style.color = ''; }
+      if (hintEl)  { hintEl.textContent = ''; hintEl.style.color = ''; }
+      return;
+    }
+    const hebel = (pos / margin).toFixed(2);
+    hebelEl.textContent = hebel + 'x';
+    hebelEl.style.color = '';
+    // Only one critical warning: margin < risk amount → liquidation before SL
+    if (risk && margin < risk) {
+      hintEl.textContent = '✕ Margin kleiner als Risikobetrag – du wirst vor deinem SL liquidiert!';
+      hintEl.style.color = 'var(--red)';
+    } else {
+      hintEl.textContent = '';
+      hintEl.style.color = '';
+    }
+  }
+
+  function fmt(n) {
+    return parseFloat(n).toLocaleString('de-CH', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+  }
+
+  function clearOutputs() {
+    document.getElementById('statusDot').classList.remove('active');
+    const vals = ['o0_pos_v','o0_rr_v','o1_betrag_v','o1_pos_v','o1_lev_v','o1_rr_v','o1_hebel_v','o2_betrag_v','o2_pos_v','o2_coins_v','o2_lev_v','o2_rr_v','o2_hebel_v'];
+    vals.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = '—'; el.classList.remove('populated','highlight'); el.style.color = ''; }
+    });
+    ['o0_pos','o1_betrag','o1_pos','o1_lev','o1_rr','o2_betrag','o2_pos','o2_coins','o2_lev','o2_rr'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('populated','highlight');
+    });
+    ['o0_badge','o1_badge','o2_badge'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.className = 'risk-badge'; el.textContent = ''; }
+    });
+    const n = document.getElementById('o0_note');
+    if (n) n.style.display = 'none';
+    ['o1_lev_hint','o2_lev_hint','o0_rr_hint','o1_rr_hint','o2_rr_hint','o1_hebel_hint','o2_hebel_hint'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = ''; el.style.color = ''; }
+    });
+    // Reset step 2 toggles
+    [0,1,2].forEach(n => {
+      const tog = document.getElementById('hebel_toggle' + n);
+      const pan = document.getElementById('hebel_panel' + n);
+      if (tog) { tog.style.display = 'none'; tog.classList.remove('open'); }
+      if (pan) pan.style.display = 'none';
+      const inp = document.getElementById('h' + n + '_margin');
+      if (inp) inp.value = '';
+      const hv = document.getElementById('o' + n + '_hebel_v');
+      if (hv) { hv.textContent = '—'; hv.style.color = ''; }
+      const hh = document.getElementById('o' + n + '_hebel_hint');
+      if (hh) { hh.textContent = ''; hh.style.color = ''; }
+    });
+    window._pos0 = null; window._pos1 = null; window._pos2 = null;
+    window._risk0 = null; window._risk1 = null; window._risk2 = null;
+  }
+
+  function resetForm() {
+    document.querySelectorAll('input').forEach(i => i.value = '');
+    clearOutputs();
+  }
+
+  // Init
+  setMode(0);
+</script>
+</body>
+</html>
